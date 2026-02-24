@@ -1,0 +1,18 @@
+{
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    { "src": "/convert", "dest": "/api/index.py" },
+    { "src": "/convert-excel-to-csv", "dest": "/api/index.py" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}
