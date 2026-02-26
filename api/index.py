@@ -5,6 +5,9 @@ import csv
 import os
 import re
 import tempfile
+import io
+import cloudconvert
+import requests as http_requests
 
 app = Flask(__name__)
 CORS(app)
@@ -37,6 +40,42 @@ def normalize_file(path):
     with open(temp_path, "w", encoding="utf-8") as f:
         f.write(content)
     return temp_path
+
+
+def cloudconvert_convert(file_bytes, filename, input_fmt, output_fmt):
+    api_key = os.environ.get('CLOUDCONVERT_API_KEY', '')
+    cloudconvert.configure(api_key=api_key, sandbox=False)
+
+    job = cloudconvert.Job.create(payload={
+        'tasks': {
+            'upload': {'operation': 'import/upload'},
+            'convert': {
+                'operation': 'convert',
+                'input': 'upload',
+                'input_format': input_fmt,
+                'output_format': output_fmt,
+            },
+            'export': {
+                'operation': 'export/url',
+                'input': 'convert',
+            }
+        }
+    })
+
+    upload_task = next(t for t in job['tasks'] if t['name'] == 'upload')
+    cloudconvert.Task.upload(
+        file_name=filename,
+        file=io.BytesIO(file_bytes),
+        task=upload_task
+    )
+
+    job = cloudconvert.Job.wait(id=job['id'])
+
+    export_task = next(t for t in job['tasks'] if t['name'] == 'export')
+    file_url = export_task['result']['files'][0]['url']
+
+    response = http_requests.get(file_url)
+    return response.content
 
 
 @app.route('/convert', methods=['POST'])
@@ -112,3 +151,47 @@ def convert_excel_to_csv():
     finally:
         if os.path.exists(input_path):
             os.remove(input_path)
+
+
+@app.route('/convert-word-to-pdf', methods=['POST'])
+def convert_word_to_pdf():
+    if 'file' not in request.files:
+        return "Dosya yüklenmedi", 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return "Dosya seçilmedi", 400
+
+    try:
+        file_bytes = file.read()
+        result = cloudconvert_convert(file_bytes, file.filename, 'docx', 'pdf')
+        return send_file(
+            io.BytesIO(result),
+            as_attachment=True,
+            download_name='donusturulmus.pdf',
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        return str(e), 500
+
+
+@app.route('/convert-pdf-to-word', methods=['POST'])
+def convert_pdf_to_word():
+    if 'file' not in request.files:
+        return "Dosya yüklenmedi", 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return "Dosya seçilmedi", 400
+
+    try:
+        file_bytes = file.read()
+        result = cloudconvert_convert(file_bytes, file.filename, 'pdf', 'docx')
+        return send_file(
+            io.BytesIO(result),
+            as_attachment=True,
+            download_name='donusturulmus.docx',
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+    except Exception as e:
+        return str(e), 500

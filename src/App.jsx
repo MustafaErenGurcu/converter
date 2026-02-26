@@ -20,6 +20,24 @@ const MODES = {
     newExt: ".csv",
     hint: ".xlsx veya .xls dosyaları",
   },
+  wordToPdf: {
+    label: "Word → PDF",
+    title: "Word'den PDF'e",
+    subtitle: "Word dosyalarınızı PDF formatına dönüştürün",
+    accept: ".docx",
+    endpoint: "/convert-word-to-pdf",
+    newExt: ".pdf",
+    hint: ".docx dosyaları",
+  },
+  pdfToWord: {
+    label: "PDF → Word",
+    title: "PDF'den Word'e",
+    subtitle: "PDF dosyalarınızı düzenlenebilir Word formatına dönüştürün",
+    accept: ".pdf",
+    endpoint: "/convert-pdf-to-word",
+    newExt: ".docx",
+    hint: ".pdf dosyaları",
+  },
 }
 
 const STATUS_COLOR = {

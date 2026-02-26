@@ -5,6 +5,9 @@ import csv
 import os
 import re
 import tempfile
+import shutil
+import subprocess
+from pdf2docx import Converter as PdfToDocxConverter
 
 app = Flask(__name__)
 CORS(app)  # React uygulamasının buraya erişmesine izin ver
@@ -123,5 +126,93 @@ def convert_excel_to_csv():
             os.remove(input_path)
 
 
+def find_libreoffice():
+    for cmd in ['libreoffice', 'soffice']:
+        if shutil.which(cmd):
+            return cmd
+    mac_path = '/Applications/LibreOffice.app/Contents/MacOS/soffice'
+    if os.path.exists(mac_path):
+        return mac_path
+    for win_path in [
+        r'C:\Program Files\LibreOffice\program\soffice.exe',
+        r'C:\Program Files (x86)\LibreOffice\program\soffice.exe',
+    ]:
+        if os.path.exists(win_path):
+            return win_path
+    return None
+
+
+@app.route('/convert-word-to-pdf', methods=['POST'])
+def convert_word_to_pdf():
+    if 'file' not in request.files:
+        return "Dosya yüklenmedi", 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return "Dosya seçilmedi", 400
+
+    soffice = find_libreoffice()
+    if not soffice:
+        return "LibreOffice kurulu değil. Lütfen LibreOffice'i kurun.", 500
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as temp_input:
+        file.save(temp_input.name)
+        input_path = temp_input.name
+
+    output_dir = tempfile.mkdtemp()
+    output_path = None
+
+    try:
+        result = subprocess.run(
+            [soffice, '--headless', '--convert-to', 'pdf', '--outdir', output_dir, input_path],
+            capture_output=True, text=True, timeout=60
+        )
+        if result.returncode != 0:
+            return f"Dönüştürme hatası: {result.stderr}", 500
+
+        base_name = os.path.splitext(os.path.basename(input_path))[0]
+        output_path = os.path.join(output_dir, base_name + '.pdf')
+
+        if not os.path.exists(output_path):
+            return "PDF dosyası oluşturulamadı", 500
+
+        return send_file(output_path, as_attachment=True, download_name="donusturulmus.pdf")
+    except subprocess.TimeoutExpired:
+        return "Dönüştürme zaman aşımına uğradı", 500
+    except Exception as e:
+        return str(e), 500
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
+
+
+@app.route('/convert-pdf-to-word', methods=['POST'])
+def convert_pdf_to_word():
+    if 'file' not in request.files:
+        return "Dosya yüklenmedi", 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return "Dosya seçilmedi", 400
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_input:
+        file.save(temp_input.name)
+        input_path = temp_input.name
+
+    output_path = input_path.replace(".pdf", ".docx")
+
+    try:
+        cv = PdfToDocxConverter(input_path)
+        cv.convert(output_path)
+        cv.close()
+        return send_file(output_path, as_attachment=True, download_name="donusturulmus.docx")
+    except Exception as e:
+        return str(e), 500
+    finally:
+        if os.path.exists(input_path):
+            os.remove(input_path)
+
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(debug=False, host='0.0.0.0', port=port)
