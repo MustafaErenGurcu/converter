@@ -44,6 +44,9 @@ def normalize_file(path):
 
 def cloudconvert_convert(file_bytes, filename, input_fmt, output_fmt):
     api_key = os.environ.get('CLOUDCONVERT_API_KEY', '')
+    if not api_key:
+        raise Exception("CLOUDCONVERT_API_KEY tanımlı değil")
+
     cloudconvert.configure(api_key=api_key, sandbox=False)
 
     job = cloudconvert.Job.create(payload={
@@ -71,9 +74,16 @@ def cloudconvert_convert(file_bytes, filename, input_fmt, output_fmt):
 
     job = cloudconvert.Job.wait(id=job['id'])
 
-    export_task = next(t for t in job['tasks'] if t['name'] == 'export')
-    file_url = export_task['result']['files'][0]['url']
+    for task in job['tasks']:
+        if task.get('status') == 'error':
+            raise Exception(f"CloudConvert hata ({task['name']}): {task.get('message', 'bilinmeyen hata')}")
 
+    export_task = next((t for t in job['tasks'] if t['name'] == 'export'), None)
+    if not export_task or not export_task.get('result') or not export_task['result'].get('files'):
+        statuses = {t['name']: t.get('status') for t in job['tasks']}
+        raise Exception(f"Dönüştürme sonucu alınamadı. Task durumları: {statuses}")
+
+    file_url = export_task['result']['files'][0]['url']
     response = http_requests.get(file_url)
     return response.content
 
