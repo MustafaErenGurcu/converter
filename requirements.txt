@@ -3,5 +3,4 @@ flask-cors
 pandas
 openpyxl
 xlrd
-cloudconvert
 requests

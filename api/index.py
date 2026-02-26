@@ -6,7 +6,7 @@ import os
 import re
 import tempfile
 import io
-import cloudconvert
+import time
 import requests as http_requests
 
 app = Flask(__name__)
@@ -47,45 +47,67 @@ def cloudconvert_convert(file_bytes, filename, input_fmt, output_fmt):
     if not api_key:
         raise Exception("CLOUDCONVERT_API_KEY tanımlı değil")
 
-    cloudconvert.configure(api_key=api_key, sandbox=False)
+    headers = {'Authorization': f'Bearer {api_key}'}
 
-    job = cloudconvert.Job.create(payload={
-        'tasks': {
-            'upload': {'operation': 'import/upload'},
-            'convert': {
-                'operation': 'convert',
-                'input': 'upload',
-                'input_format': input_fmt,
-                'output_format': output_fmt,
-            },
-            'export': {
-                'operation': 'export/url',
-                'input': 'convert',
+    # Job oluştur
+    job_resp = http_requests.post(
+        'https://api.cloudconvert.com/v2/jobs',
+        json={
+            'tasks': {
+                'upload': {'operation': 'import/upload'},
+                'convert': {
+                    'operation': 'convert',
+                    'input': 'upload',
+                    'input_format': input_fmt,
+                    'output_format': output_fmt,
+                },
+                'export': {
+                    'operation': 'export/url',
+                    'input': 'convert',
+                }
             }
-        }
-    })
-
-    upload_task = next(t for t in job['tasks'] if t['name'] == 'upload')
-    cloudconvert.Task.upload(
-        file_name=filename,
-        file=io.BytesIO(file_bytes),
-        task=upload_task
+        },
+        headers=headers
     )
+    job_resp.raise_for_status()
+    job = job_resp.json()['data']
 
-    job = cloudconvert.Job.wait(id=job['id'])
+    # Upload form bilgilerini al
+    upload_task = next(t for t in job['tasks'] if t['name'] == 'upload')
+    form = upload_task['result']['form']
 
-    for task in job['tasks']:
-        if task.get('status') == 'error':
-            raise Exception(f"CloudConvert hata ({task['name']}): {task.get('message', 'bilinmeyen hata')}")
+    # Dosyayı yükle
+    params = dict(form['parameters'])
+    upload_resp = http_requests.post(
+        form['url'],
+        data=params,
+        files={'file': (filename, io.BytesIO(file_bytes))}
+    )
+    upload_resp.raise_for_status()
 
-    export_task = next((t for t in job['tasks'] if t['name'] == 'export'), None)
-    if not export_task or not export_task.get('result') or not export_task['result'].get('files'):
-        statuses = {t['name']: t.get('status') for t in job['tasks']}
-        raise Exception(f"Dönüştürme sonucu alınamadı. Task durumları: {statuses}")
+    # Job tamamlanana kadar bekle (max 55 saniye)
+    job_id = job['id']
+    for _ in range(55):
+        poll = http_requests.get(
+            f'https://api.cloudconvert.com/v2/jobs/{job_id}',
+            headers=headers
+        )
+        poll.raise_for_status()
+        job_data = poll.json()['data']
 
-    file_url = export_task['result']['files'][0]['url']
-    response = http_requests.get(file_url)
-    return response.content
+        if job_data['status'] == 'finished':
+            export_task = next(t for t in job_data['tasks'] if t['name'] == 'export')
+            file_url = export_task['result']['files'][0]['url']
+            return http_requests.get(file_url).content
+
+        if job_data['status'] == 'error':
+            failed = next((t for t in job_data['tasks'] if t.get('status') == 'error'), None)
+            msg = failed.get('message', 'bilinmeyen hata') if failed else 'job başarısız'
+            raise Exception(f"CloudConvert hatası: {msg}")
+
+        time.sleep(1)
+
+    raise Exception("Dönüştürme zaman aşımına uğradı")
 
 
 @app.route('/convert', methods=['POST'])
