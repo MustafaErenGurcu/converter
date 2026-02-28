@@ -1,7 +1,49 @@
+/*
+  INDEX.CSS — Tasarım Sistemi Temelleri
+  ======================================
+  Orijinal renk şemasına geri dönüldü.
+  Fontlar (Inter + JetBrains Mono) korunuyor.
+*/
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* ─── Renkler (orijinal) ─── */
+  --accent: #C8102E;
+  --accent-dark: #a50c24;
+  --accent-glow: rgba(200, 16, 46, 0.35);
+  --accent-subtle: rgba(200, 16, 46, 0.06);
+
+  /* Arka plan */
+  --bg-main: #f0f0f0;
+
+  /* Kart ve yüzey */
+  --bg-card: #ffffff;
+  --bg-surface: #f4f4f4;
+  --bg-surface-hover: rgba(200, 16, 46, 0.06);
+  --bg-upload: #fafafa;
+
+  /* Metin */
+  --text-primary: #333;
+  --text-secondary: #555;
+  --text-muted: #888;
+  --text-hint: #bbb;
+
+  /* Kenar */
+  --border-light: #eee;
+  --border-dashed: #ddd;
+
+  /* ─── Tipografi ─── */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* ─── Boyutlar ─── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* ─── Geçişler ─── */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,4 +55,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  font-family: var(--font-primary);
+  line-height: 1.5;
+  color: var(--text-primary);
 }

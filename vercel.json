@@ -15,6 +15,7 @@
     { "src": "/convert-excel-to-csv", "dest": "/api/index.py" },
     { "src": "/convert-word-to-pdf", "dest": "/api/index.py" },
     { "src": "/convert-pdf-to-word", "dest": "/api/index.py" },
+    { "src": "/merge-pdf", "dest": "/api/index.py" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }

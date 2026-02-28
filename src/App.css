@@ -1,109 +1,187 @@
+/*
+  APP.CSS — Uygulama Stilleri
+  ============================
+  Orijinal renk şeması + uçak animasyonu eklendi.
+*/
+
 * {
   box-sizing: border-box;
 }
 
+/* ─── ARKA PLAN ─── */
 body {
   margin: 0;
-  background: linear-gradient(135deg, #f0f2f5 0%, #e8eaf0 100%);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-main);
+  font-family: var(--font-primary);
   min-height: 100vh;
+  overflow: hidden;
+  /* Uçaklar ekran dışına çıktığında scrollbar oluşmasın */
 }
 
+/* ─── LAYOUT ─── */
 .container {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 20px;
+  position: relative;
+  z-index: 1;
+  /* Kartın uçakların üzerinde olması için */
 }
 
+/* ─── KART (orijinal stil) ─── */
 .card {
-  background: white;
-  padding: 48px 40px;
-  border-radius: 20px;
+  background: var(--bg-card);
+  padding: 40px 36px;
+  border-radius: var(--radius-xl);
   width: 100%;
-  max-width: 460px;
+  max-width: 520px;
   text-align: center;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 2;
 }
 
-.logo {
-  width: 80px;
-  margin-bottom: 28px;
+/* ─── BAŞLIK ─── */
+.mode-header {
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 24px;
 }
 
 h1 {
-  margin: 0 0 8px 0;
-  font-size: 26px;
-  font-weight: 700;
-  color: #c8102e;
+  margin: 0 0 6px 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 14px;
-  color: #888;
-  margin: 0 0 28px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Mod sekmeleri */
+/* ─── SEKMELER ─── */
 .tabs {
   display: flex;
-  background: #f4f4f4;
-  border-radius: 10px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
   padding: 4px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .tab {
   flex: 1;
-  padding: 10px;
+  min-width: fit-content;
+  padding: 9px 10px;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   background: transparent;
-  color: #888;
+  color: #999;
+  font-family: var(--font-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.tab:hover:not(.active) {
+  color: var(--text-secondary);
+  background: var(--bg-surface-hover);
 }
 
 .tab.active {
-  background: white;
-  color: #2e7d32;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.10);
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 10px var(--accent-glow);
 }
 
-/* Dosya yükleme alanı */
+.tab-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ─── UPLOAD ALANI + DRAG & DROP ─── */
 .upload-area {
-  border: 2px dashed #ddd;
-  border-radius: 12px;
+  border: 1.5px dashed var(--border-dashed);
+  border-radius: var(--radius-lg);
   padding: 28px 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 20px;
+  transition: all var(--transition-normal);
+  margin-bottom: 16px;
   display: block;
+  background: var(--bg-upload);
 }
 
 .upload-area:hover {
-  border-color: #2e7d32;
-  background: #f6fbf6;
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+.upload-area.dragging {
+  border-color: var(--accent);
+  border-style: solid;
+  background: rgba(200, 16, 46, 0.08);
+  transform: scale(1.02);
+  box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.1);
+  animation: dragPulse 1.5s ease infinite;
+}
+
+@keyframes dragPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(200, 16, 46, 0.05);
+  }
 }
 
 .upload-icon {
   font-size: 32px;
   margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.upload-icon svg {
+  transition: transform var(--transition-normal);
+}
+
+.upload-area:hover .upload-icon svg {
+  transform: translateY(-2px);
 }
 
 .upload-text {
   font-size: 14px;
-  color: #555;
+  color: var(--text-secondary);
   margin: 0 0 4px 0;
+  font-weight: 500;
 }
 
 .upload-hint {
   font-size: 12px;
-  color: #aaa;
+  color: var(--text-hint);
   margin: 0;
 }
 
@@ -111,66 +189,348 @@ h1 {
   display: none;
 }
 
-/* Dosya listesi */
+/* ─── DOSYA LİSTESİ ─── */
 .file-list {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   text-align: left;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ddd transparent;
+}
+
+.file-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 2px;
 }
 
 .file-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
-  border-radius: 8px;
-  margin-bottom: 6px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  margin-bottom: 5px;
   background: #f8f8f8;
-  font-size: 13px;
+  border: 1px solid var(--border-light);
   border-left: 3px solid #ddd;
-  transition: border-color 0.2s;
+  font-size: 13px;
+  transition: border-left-color var(--transition-normal);
 }
 
-.file-item.done   { border-left-color: #4caf50; }
-.file-item.error  { border-left-color: #e53935; }
-.file-item.processing { border-left-color: #f0a500; }
+.file-item.done {
+  border-left-color: #22c55e;
+}
+
+.file-item.error {
+  border-left-color: #ef4444;
+}
+
+.file-item.processing {
+  border-left-color: #f59e0b;
+}
+
+.file-order-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.file-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--text-hint);
+  line-height: 1;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.file-btn:hover:not(:disabled) {
+  background: #eee;
+  color: var(--text-secondary);
+}
+
+.file-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.file-btn-remove {
+  font-size: 16px;
+  color: #ccc;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.file-btn-remove:hover:not(:disabled) {
+  background: #fdecea;
+  color: #ef4444;
+}
 
 .file-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 65%;
-  color: #333;
+  flex: 1;
+  min-width: 0;
+  color: var(--text-primary);
   font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 
 .file-status {
   font-weight: 600;
   white-space: nowrap;
   font-size: 12px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Dönüştür butonu */
+.status-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─── DÖNÜŞTÜR BUTONU ─── */
 .convert-btn {
   width: 100%;
   padding: 14px;
   border: none;
-  border-radius: 10px;
-  background: #2e7d32;
+  border-radius: var(--radius-md);
+  background: var(--accent);
   color: white;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   letter-spacing: 0.3px;
+  box-shadow: 0 4px 16px var(--accent-glow);
+  font-family: var(--font-primary);
 }
 
 .convert-btn:hover:not(:disabled) {
-  background: #1b5e20;
+  background: var(--accent-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(46,125,50,0.35);
+  box-shadow: 0 8px 24px rgba(200, 16, 46, 0.45);
 }
 
 .convert-btn:disabled {
-  opacity: 0.65;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ══════════════════════════════════════════════
+   UÇAK ANİMASYONU
+   ══════════════════════════════════════════════
+   Her uçak bir <div class="airplane"> olarak spawn edilir.
+   JS tarafında rastgele Y pozisyonu, boyut ve süre atanır.
+   CSS keyframes ile ekranın bir ucundan diğerine uçar.
+   
+   İki yön var:
+   - fly-right: Soldan sağa → SVG sağa bakıyor (varsayılan)
+   - fly-left:  Sağdan sola → scaleX(-1) ile SVG sola çevrilir
+   
+   İZ (TRAIL) EFEKTİ:
+   ::after pseudo-element ile her uçağın arkasında kesik kesik çizgi.
+   - repeating-linear-gradient → kesik çizgi pattern'i
+   - mask-image → iz, uçaktan uzaklaştıkça solarak kaybolur
+   - Bu "solma" efekti izi doğal ve zarif gösterir
+*/
+
+.airplane-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* Uçaklar tıklamayı engellemesin */
+  z-index: 0;
+  /* Kartın altında */
+  overflow: hidden;
+}
+
+.airplane {
+  position: absolute;
+  color: var(--accent);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/*
+  İZ (TRAIL) — ::after pseudo-element
+  ────────────────────────────────────
+  NEDEN repeating-linear-gradient?
+  → border-style: dashed ile dash boyutu kontrol edilemez.
+    Gradient ile hem dash uzunluğunu hem boşluk miktarını
+    piksel seviyesinde ayarlayabiliyoruz.
+  
+  NEDEN mask-image?
+  → İzin uçağa yakın kısmı belirgin, uzak kısmı silik olmalı.
+    mask-image ile "solma" (fade-out) efekti veriyoruz.
+    Bu, iz'in doğal ve organik görünmesini sağlar.
+  
+  YÖN: trail her zaman right: 100% konumunda (uçağın solunda).
+  fly-left uçakları scaleX(-1) ile aynalndığında trail otomatik
+  olarak sağ tarafa geçer — her iki yönde de doğru çalışır.
+*/
+.airplane::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 85%;
+  width: 140px;
+  height: 1.5px;
+  background: repeating-linear-gradient(90deg,
+      var(--accent) 0px,
+      var(--accent) 4px,
+      transparent 4px,
+      transparent 10px);
+  opacity: 0.18;
+  transform: translateY(-50%);
+  /* İzin solarak kaybolması — uçağa yakın belirgin, uzakta silik */
+  mask-image: linear-gradient(to left, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+  -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+
+/* Soldan sağa uçuş — SVG zaten sağa bakıyor */
+.airplane.fly-right {
+  animation: flyRight var(--fly-duration, 8s) linear forwards;
+}
+
+/* Sağdan sola uçuş — scaleX(-1) ile uçak + iz sola çevrilir */
+.airplane.fly-left {
+  animation: flyLeft var(--fly-duration, 8s) linear forwards;
+}
+
+@keyframes flyRight {
+  0% {
+    transform: translateX(-80px);
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 0.4;
+  }
+
+  90% {
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: translateX(calc(100vw + 80px));
+    opacity: 0;
+  }
+}
+
+@keyframes flyLeft {
+  0% {
+    transform: translateX(calc(100vw + 80px)) scaleX(-1);
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 0.4;
+  }
+
+  90% {
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: translateX(-80px) scaleX(-1);
+    opacity: 0;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   BULUT ANİMASYONU
+   ══════════════════════════════════════════════
+   Bulutlar uçaklarla aynı airplane-layer içinde ama
+   uçaklardan ÖNCE render ediliyor → doğal derinlik sırası:
+   arka plan → bulutlar → uçaklar → kart
+   
+   Bulutlar uçaklardan farklı:
+   - Daha büyük (80-180px vs 20-36px)
+   - Daha yavaş (15-30s vs 6-12s)
+   - Daha soluk (opacity 0.2 vs 0.4)
+   - İz bırakmaz (::after yok)
+   - Gri renk (CSS color attribute)
+*/
+
+.cloud {
+  position: absolute;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Sağa drift */
+.cloud.drift-right {
+  animation: driftRight var(--drift-duration, 20s) linear forwards;
+}
+
+/* Sola drift */
+.cloud.drift-left {
+  animation: driftLeft var(--drift-duration, 20s) linear forwards;
+}
+
+@keyframes driftRight {
+  0% {
+    transform: translateX(-200px);
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 0.2;
+  }
+
+  90% {
+    opacity: 0.2;
+  }
+
+  100% {
+    transform: translateX(calc(100vw + 200px));
+    opacity: 0;
+  }
+}
+
+@keyframes driftLeft {
+  0% {
+    transform: translateX(calc(100vw + 200px));
+    opacity: 0;
+  }
+
+  5% {
+    opacity: 0.2;
+  }
+
+  90% {
+    opacity: 0.2;
+  }
+
+  100% {
+    transform: translateX(-200px);
+    opacity: 0;
+  }
 }

@@ -10,6 +10,7 @@ export default defineConfig({
       '/convert-excel-to-csv': 'http://localhost:5001',
       '/convert-word-to-pdf': 'http://localhost:5001',
       '/convert-pdf-to-word': 'http://localhost:5001',
+      '/merge-pdf': 'http://localhost:5001',
     }
   }
 })

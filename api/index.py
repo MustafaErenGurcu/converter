@@ -8,6 +8,7 @@ import tempfile
 import io
 import time
 import requests as http_requests
+from pypdf import PdfWriter, PdfReader
 
 app = Flask(__name__)
 CORS(app)
@@ -224,6 +225,33 @@ def convert_pdf_to_word():
             as_attachment=True,
             download_name='donusturulmus.docx',
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+    except Exception as e:
+        return str(e), 500
+
+
+@app.route('/merge-pdf', methods=['POST'])
+def merge_pdf():
+    files = request.files.getlist('files')
+    if not files or len(files) < 2:
+        return "En az 2 PDF dosyası gerekli", 400
+
+    try:
+        writer = PdfWriter()
+        for f in files:
+            reader = PdfReader(io.BytesIO(f.read()))
+            for page in reader.pages:
+                writer.add_page(page)
+
+        output = io.BytesIO()
+        writer.write(output)
+        output.seek(0)
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name='birlestirilmis.pdf',
+            mimetype='application/pdf'
         )
     except Exception as e:
         return str(e), 500
