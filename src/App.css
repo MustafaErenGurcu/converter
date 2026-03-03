@@ -14,8 +14,8 @@ body {
   background: var(--bg-main);
   font-family: var(--font-primary);
   min-height: 100vh;
-  overflow: hidden;
-  /* Uçaklar ekran dışına çıktığında scrollbar oluşmasın */
+  overflow-x: hidden;
+  /* Yatay scroll engelle, dikey scroll zarf animasyonu için gerekli */
 }
 
 /* ─── LAYOUT ─── */

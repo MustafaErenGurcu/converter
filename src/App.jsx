@@ -31,6 +31,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import './App.css'
+import EnvelopeIntro from './EnvelopeIntro'
 
 const MODES = {
   csvToExcel: {
@@ -88,37 +89,30 @@ const MODES = {
 /*
   YAN BAKIŞ UÇAK SVG BİLEŞENİ
   ────────────────────────────
-  NEDEN özel SVG? Lucide'ın Plane ikonu kuş bakışı (üstten) görünüm.
-  Kullanıcı yan bakış (profil) istiyor — bu yüzden kendi SVG'mizi çizdik.
+  Ticari uçak silüeti — pürüzsüz Bézier eğrileriyle çizilmiş.
+  Kalın gövde, büyük swept-back kanat, belirgin kuyruk.
   
   SVG sağa bakıyor (burun sağda). Sola giden uçaklar için CSS'te
   scaleX(-1) ile yatay aynalama yapıyoruz.
-  
-  Parçalar:
-  - Gövde (fuselage): Uzun silindirik ana gövde
-  - Kuyruk (tail fin): Arkadaki dikey kanatçık
-  - Ana kanat (wing): Geriye eğimli (swept-back) büyük kanat
-  - Kuyruk: Arkada yukarı çıkan fin + küçük yatay stabilizer
-  
-  Tek path ile temiz silüet → içi tamamen dolu (filled) görünüm.
 */
 const SideAirplane = ({ size = 24 }) => (
   <svg
     width={size}
     height={size * 0.55}
-    viewBox="0 0 80 44"
+    viewBox="0 0 100 55"
     fill="currentColor"
     xmlns="http://www.w3.org/2000/svg"
   >
-    {/* Ana gövde + burun — sivri burunlu, yuvarlak gövde */}
-    <path d="M78,22 C78,19 76,17 72,16 L18,16 C12,16 6,18 2,20 L0,22 L2,24 C6,26 12,28 18,28 L72,28 C76,27 78,25 78,22 Z" />
-    {/* Ana kanat — geriye eğimli (swept-back), referans görseldeki gibi */}
-    <path d="M38,16 L22,4 L18,4 L20,8 L30,16 Z" />
-    <path d="M40,28 L24,38 L20,38 L22,34 L32,28 Z" />
-    {/* Kuyruk kanatçığı (tail fin) — belirgin, yukarı çıkan */}
-    <path d="M14,16 L6,2 L2,2 L4,8 L10,16 Z" />
+    {/* Gövde — kalın, yuvarlak, pürüzsüz */}
+    <path d="M96,24 C99,24 100,26.5 100,28 C100,29.5 99,32 96,32 L22,33 C15,33.5 9,32.5 5,31 C2,29.5 2,26.5 5,25 C9,23.5 15,22.5 22,23 Z" />
+    {/* Ana kanat — alt, büyük swept-back */}
+    <path d="M60,33 C52,39 42,47 34,51 L26,51 C30,47 38,39 46,33 Z" />
+    {/* Üst küçük kanat */}
+    <path d="M56,23 C48,17 40,9 34,5 L28,5 C32,9 38,17 46,23 Z" />
+    {/* Kuyruk kanatçığı — yukarı doğru eğimli */}
+    <path d="M16,23 C12,17 8,9 6,4 L2,4 C4,9 8,17 12,23 Z" />
     {/* Kuyruk yatay stabilizer */}
-    <path d="M12,28 L6,34 L3,34 L5,30 L10,28 Z" />
+    <path d="M14,33 C10,37 7,41 4,43 L2,41 C5,39 8,35 10,33 Z" />
   </svg>
 )
 
@@ -436,7 +430,7 @@ function App() {
   }
 
   return (
-    <>
+    <EnvelopeIntro>
       {/* ─── UÇAK KATMANI ───
           Kartın ALTINDA, tam ekran kaplayan sabit (fixed) bir katman.
           pointer-events: none → uçaklara tıklanmaz, alttaki kart tıklanabilir kalır.
@@ -584,7 +578,7 @@ function App() {
           </button>
         </div>
       </div>
-    </>
+    </EnvelopeIntro>
   )
 }
 
