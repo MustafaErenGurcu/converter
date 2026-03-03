@@ -577,6 +577,11 @@ function App() {
                   : 'Dönüştür ve İndir'}
           </button>
         </div>
+
+        {/* ═══ FOOTER ═══ */}
+        <footer className="app-footer">
+          Made By Rabia & Eren
+        </footer>
       </div>
     </EnvelopeIntro>
   )

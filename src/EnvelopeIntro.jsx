@@ -2,7 +2,7 @@
   AIRPLANE INTRO — Uçaklı Geçiş Animasyonu
   ==========================================
   Temiz, minimalist giriş ekranı:
-  - Ortada sadece "InternConverter" yazısı (elegant tipografi)
+  - Ortada sadece "InternWorks" yazısı (elegant tipografi)
   - Aşağı kaydırınca bir uçak ekrandan geçer
   - Uçak geçerken sahne değişir → ana uygulamaya geçiş
 
@@ -149,7 +149,7 @@ export default function EnvelopeIntro({ children }) {
                     >
                         <h1 className="intro-title">
                             <span className="intro-title-intern">Intern</span>
-                            <span className="intro-title-converter">Converter</span>
+                            <span className="intro-title-works">Works</span>
                         </h1>
                         <div className="intro-line" style={{ opacity: lineOpacity }} />
                         <p className="intro-tagline" style={{ opacity: lineOpacity }}>
