@@ -7,6 +7,8 @@ import re
 import tempfile
 import io
 import time
+import json
+import zipfile
 import requests as http_requests
 from pypdf import PdfWriter, PdfReader
 
@@ -252,6 +254,56 @@ def merge_pdf():
             as_attachment=True,
             download_name='birlestirilmis.pdf',
             mimetype='application/pdf'
+        )
+    except Exception as e:
+        return str(e), 500
+
+
+@app.route('/pdf-info', methods=['POST'])
+def pdf_info():
+    if 'file' not in request.files:
+        return "Dosya yüklenmedi", 400
+    file = request.files['file']
+    try:
+        reader = PdfReader(io.BytesIO(file.read()))
+        return {'pageCount': len(reader.pages)}
+    except Exception as e:
+        return str(e), 500
+
+
+@app.route('/split-pdf', methods=['POST'])
+def split_pdf():
+    if 'file' not in request.files:
+        return "Dosya yüklenmedi", 400
+    file = request.files['file']
+    ranges = json.loads(request.form.get('ranges', '[]'))
+    if not ranges:
+        return "En az 1 parça tanımlayın", 400
+
+    try:
+        pdf_bytes = file.read()
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        total = len(reader.pages)
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for i, r in enumerate(ranges):
+                start = max(1, int(r['start'])) - 1  # 0-indexed
+                end = min(total, int(r['end']))        # exclusive upper bound
+                writer = PdfWriter()
+                for page_idx in range(start, end):
+                    writer.add_page(reader.pages[page_idx])
+                part_buffer = io.BytesIO()
+                writer.write(part_buffer)
+                part_buffer.seek(0)
+                zf.writestr(f'parca_{i + 1}_sayfa_{start + 1}-{end}.pdf', part_buffer.read())
+
+        zip_buffer.seek(0)
+        return send_file(
+            zip_buffer,
+            as_attachment=True,
+            download_name='bolunmus_pdf.zip',
+            mimetype='application/zip'
         )
     except Exception as e:
         return str(e), 500

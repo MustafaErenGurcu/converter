@@ -11,6 +11,8 @@ export default defineConfig({
       '/convert-word-to-pdf': 'http://localhost:5001',
       '/convert-pdf-to-word': 'http://localhost:5001',
       '/merge-pdf': 'http://localhost:5001',
+      '/pdf-info': 'http://localhost:5001',
+      '/split-pdf': 'http://localhost:5001',
     }
   }
 })

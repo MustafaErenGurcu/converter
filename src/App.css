@@ -535,6 +535,76 @@ h1 {
   }
 }
 
+/* ─── PDF BÖLME UI ─── */
+.split-ranges {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 4px;
+  text-align: left;
+}
+
+.split-info {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  margin: 0 0 4px;
+}
+
+.split-range-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-hover, #f5f5f5);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.split-range-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #222);
+  min-width: 58px;
+}
+
+.split-range-sep {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+}
+
+.split-range-input {
+  width: 62px;
+  padding: 4px 8px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  background: var(--bg-card, #fff);
+  color: var(--text-primary, #222);
+}
+
+.split-range-input:focus {
+  outline: none;
+  border-color: var(--accent, #6366f1);
+}
+
+.add-range-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px dashed var(--border, #ddd);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-muted, #888);
+  margin-top: 2px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.add-range-btn:hover {
+  background: var(--bg-hover, #f5f5f5);
+  color: var(--text-primary, #222);
+}
+
 /* ─── FOOTER ─── */
 .app-footer {
   position: fixed;

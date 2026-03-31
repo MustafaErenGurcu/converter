@@ -26,6 +26,7 @@ import {
   FileSpreadsheet,
   FileText,
   Combine,
+  Scissors,
   Loader2,
   CheckCircle2,
   XCircle,
@@ -83,6 +84,16 @@ const MODES = {
     hint: ".pdf dosyaları · En az 2 dosya seçin",
     isMerge: true,
     icon: Combine,
+  },
+  splitPdf: {
+    label: "PDF Böl",
+    title: "PDF Bölme",
+    subtitle: "PDF dosyasını istediğiniz sayfa aralıklarına bölerek indirin",
+    accept: ".pdf",
+    endpoint: "/split-pdf",
+    hint: ".pdf dosyası · Tek dosya seçin",
+    isSplit: true,
+    icon: Scissors,
   },
 }
 
@@ -271,6 +282,8 @@ function App() {
   const [mode, setMode] = useState('csvToExcel')
   const [fileList, setFileList] = useState([])
   const [isDragging, setIsDragging] = useState(false)
+  const [pageCount, setPageCount] = useState(0)
+  const [splitRanges, setSplitRanges] = useState([])
   const inputRef = useRef(null)
   const dragCounter = useRef(0)
 
@@ -283,7 +296,24 @@ function App() {
   const handleModeChange = (newMode) => {
     setMode(newMode)
     setFileList([])
+    setPageCount(0)
+    setSplitRanges([])
     if (inputRef.current) inputRef.current.value = ''
+  }
+
+  const fetchPageCount = async (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    try {
+      const res = await fetch('/pdf-info', { method: 'POST', body: formData })
+      if (res.ok) {
+        const data = await res.json()
+        setPageCount(data.pageCount)
+        setSplitRanges([{ start: 1, end: data.pageCount }])
+      }
+    } catch {
+      // sayfa sayısı alınamazsa kullanıcı manuel girer
+    }
   }
 
   const processFiles = (files) => {
@@ -296,6 +326,11 @@ function App() {
       setFileList(prev => [...prev, ...selected])
     } else {
       setFileList(selected)
+      if (current.isSplit && selected.length > 0) {
+        setPageCount(0)
+        setSplitRanges([])
+        fetchPageCount(selected[0].file)
+      }
     }
     if (inputRef.current) inputRef.current.value = ''
   }
@@ -381,6 +416,39 @@ function App() {
     }
   }
 
+  const handleSplit = async () => {
+    if (fileList.length === 0 || splitRanges.length === 0) return
+    setFileList(prev => prev.map(f => ({ ...f, status: 'processing' })))
+    const formData = new FormData()
+    formData.append('file', fileList[0].file)
+    formData.append('ranges', JSON.stringify(splitRanges))
+    try {
+      const response = await fetch('/split-pdf', { method: 'POST', body: formData })
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'bolunmus_pdf.zip'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        window.URL.revokeObjectURL(url)
+        setFileList(prev => prev.map(f => ({ ...f, status: 'done' })))
+      } else {
+        const msg = await response.text()
+        setFileList(prev => prev.map(f => ({ ...f, status: 'error', error: msg || 'Bilinmeyen hata' })))
+      }
+    } catch {
+      setFileList(prev => prev.map(f => ({ ...f, status: 'error', error: 'Sunucuya bağlanılamadı' })))
+    }
+  }
+
+  const addSplitRange = () => setSplitRanges(prev => [...prev, { start: 1, end: pageCount }])
+  const removeSplitRange = (index) => setSplitRanges(prev => prev.filter((_, i) => i !== index))
+  const updateSplitRange = (index, field, value) =>
+    setSplitRanges(prev => prev.map((r, i) => i === index ? { ...r, [field]: Number(value) } : r))
+
   const handleRemoveFile = (index) => setFileList(prev => prev.filter((_, i) => i !== index))
 
   const handleMoveUp = (index) => {
@@ -404,6 +472,8 @@ function App() {
   const handleConvertAll = () => {
     if (current.isMerge) {
       handleMerge()
+    } else if (current.isSplit) {
+      handleSplit()
     } else {
       if (fileList.length === 0) return
       fileList.forEach((item, index) => convertFile(item, index))
@@ -412,6 +482,7 @@ function App() {
 
   const isProcessing = fileList.some(f => f.status === 'processing')
   const isMergeReady = current.isMerge && fileList.length >= 2
+  const isSplitReady = current.isSplit && fileList.length > 0 && splitRanges.length > 0 && pageCount > 0
 
   const renderStatusIcon = (status) => {
     switch (status) {
@@ -521,7 +592,7 @@ function App() {
             </p>
             <p className="upload-hint">
               {current.hint}
-              {current.isMerge ? ' · Her seferde dosya ekleyebilirsiniz' : ' · Çoklu seçim desteklenir'}
+              {current.isMerge ? ' · Her seferde dosya ekleyebilirsiniz' : current.isSplit ? '' : ' · Çoklu seçim desteklenir'}
             </p>
           </label>
 
@@ -531,7 +602,7 @@ function App() {
             key={mode}
             type="file"
             accept={current.accept}
-            multiple
+            multiple={!current.isSplit}
             onChange={handleFileChange}
             className="file-input"
           />
@@ -559,22 +630,68 @@ function App() {
             </div>
           )}
 
+          {current.isSplit && fileList.length > 0 && (
+            <div className="split-ranges">
+              {pageCount === 0
+                ? <p className="split-info">Sayfa bilgisi alınıyor...</p>
+                : <>
+                    <p className="split-info">Toplam <strong>{pageCount}</strong> sayfa</p>
+                    {splitRanges.map((r, i) => (
+                      <div key={i} className="split-range-item">
+                        <span className="split-range-label">Parça {i + 1}</span>
+                        <span className="split-range-sep">Sayfa</span>
+                        <input
+                          type="number"
+                          className="split-range-input"
+                          min={1}
+                          max={pageCount}
+                          value={r.start}
+                          onChange={e => updateSplitRange(i, 'start', e.target.value)}
+                        />
+                        <span className="split-range-sep">–</span>
+                        <input
+                          type="number"
+                          className="split-range-input"
+                          min={1}
+                          max={pageCount}
+                          value={r.end}
+                          onChange={e => updateSplitRange(i, 'end', e.target.value)}
+                        />
+                        {splitRanges.length > 1 && !isProcessing && (
+                          <button className="file-btn file-btn-remove" onClick={() => removeSplitRange(i)} title="Kaldır">×</button>
+                        )}
+                      </div>
+                    ))}
+                    {!isProcessing && (
+                      <button className="add-range-btn" onClick={addSplitRange}>+ Parça Ekle</button>
+                    )}
+                  </>
+              }
+            </div>
+          )}
+
           <button
             className="convert-btn"
             onClick={handleConvertAll}
-            disabled={isProcessing || fileList.length === 0 || (current.isMerge && fileList.length < 2)}
+            disabled={isProcessing || fileList.length === 0 || (current.isMerge && fileList.length < 2) || (current.isSplit && !isSplitReady)}
           >
             {isProcessing
               ? 'İşleniyor...'
-              : current.isMerge
-                ? isMergeReady
-                  ? `Birleştir ve İndir (${fileList.length} dosya)`
-                  : fileList.length === 1
-                    ? 'En az 2 dosya seçin'
-                    : 'Birleştir ve İndir'
-                : fileList.length > 0
-                  ? `Dönüştür ve İndir (${fileList.length} dosya)`
-                  : 'Dönüştür ve İndir'}
+              : current.isSplit
+                ? isSplitReady
+                  ? `Böl ve İndir (${splitRanges.length} parça)`
+                  : pageCount === 0
+                    ? 'Sayfa bilgisi bekleniyor...'
+                    : 'Parça Ekleyin'
+                : current.isMerge
+                  ? isMergeReady
+                    ? `Birleştir ve İndir (${fileList.length} dosya)`
+                    : fileList.length === 1
+                      ? 'En az 2 dosya seçin'
+                      : 'Birleştir ve İndir'
+                  : fileList.length > 0
+                    ? `Dönüştür ve İndir (${fileList.length} dosya)`
+                    : 'Dönüştür ve İndir'}
           </button>
         </div>
       </div>
